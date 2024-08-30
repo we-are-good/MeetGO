@@ -5,7 +5,7 @@ MeetGo
 ## 👩‍💻 프로젝트 소개
 
 20대 대학생들을 위한 미팅 주선 프로그램
-https://meet-go.vercel.app/
+meet-go-project.vercel.app
 
 ## ⏲️ 개발 기간
 
