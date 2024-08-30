@@ -1,7 +1,7 @@
 'use client';
 
-import { useMsgsQuery, useRoomDataQuery } from '@/hooks/useQueries/useChattingQuery';
 import { CHATDATA_QUERY_KEY, MSGS_QUERY_KEY } from '@/query/chat/chatQueryKeys';
+import { useMsgsQuery, useRoomDataQuery } from '@/query/useQueries/useChattingQuery';
 import { chatStore } from '@/store/chatStore';
 import { chatRoomType } from '@/types/chatTypes';
 import { ITEM_INTERVAL } from '@/utils/constant';
@@ -16,7 +16,6 @@ const InitChat = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
   const {
     room: { room_id, leader_id }
   } = useRoomDataQuery(chatRoomId);
-  // const roomId = room.room_id;
   const router = useRouter();
   const queryClient = useQueryClient();
   const allMsgs = useMsgsQuery(chatRoomId);

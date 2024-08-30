@@ -1,4 +1,5 @@
 'use client';
+
 import { Message } from '@/types/chatTypes';
 import { clientSupabase } from '@/utils/supabase/client';
 import { useEffect, useRef, useState } from 'react';
@@ -9,12 +10,13 @@ import LoadChatMore from './LoadChatMore';
 import { chatStore } from '@/store/chatStore';
 import OthersChat from './OthersChat';
 import ChatSearch from './ChatSearch';
-import { useMsgsQuery, useMyLastMsgs, useRoomDataQuery } from '@/hooks/useQueries/useChattingQuery';
 import MyChat from './MyChat';
 import RememberLastChat from '../chatFooter/RememberLastChat';
 import { isNextDay, showingDate } from '@/utils/utilFns';
 import { useQueryClient } from '@tanstack/react-query';
 import { MSGS_QUERY_KEY } from '@/query/chat/chatQueryKeys';
+import { SCROLL_GAP } from '@/utils/constant';
+import { useMsgsQuery, useMyLastMsgs, useRoomDataQuery } from '@/query/useQueries/useChattingQuery';
 
 const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string }) => {
   const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
@@ -25,7 +27,7 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
   const queryClient = useQueryClient();
   const [isScrolling, setIsScrolling] = useState(false);
   const [isScrollTop, setIsScrollTop] = useState(true);
-  const [count, setCount] = useState(1);
+  const [loadCount, setLoadCount] = useState(1);
   const [newAddedMsgNum, setNewAddedMsgNum] = useState(0);
   const [lastCheckedDiv, setLastCheckedDiv] = useState<HTMLElement | null>();
   const [checkedLastMsg, setCheckedLastMsg] = useState(false);
@@ -68,11 +70,14 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
           { event: 'DELETE', schema: 'public', table: 'messages', filter: `chatting_room_id=eq.${chatRoomId}` },
           async (payload) => {
             if (payload) {
-              await queryClient.invalidateQueries({ queryKey: [MSGS_QUERY_KEY, chatRoomId] });
+              // await queryClient.invalidateQueries({ queryKey: [MSGS_QUERY_KEY, chatRoomId] });
               messages &&
-                queryClient.setQueryData(
+                queryClient.setQueryData<Message[]>(
                   [MSGS_QUERY_KEY, chatRoomId],
-                  messages.filter((msg) => msg.message_id !== payload.old.message_id)
+                  (oldData = []) => {
+                    return oldData.filter((msg) => msg.message_id !== payload.old.message_id);
+                  }
+                  // messages.filter((msg) => msg.message_id !== payload.old.message_id)
                 );
             }
           }
@@ -118,7 +123,7 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
           scrollBox.scrollTop = scrollBox.scrollHeight;
           prevMsgsLengthRef.current = messages.length;
         }
-      } else if (prevMsgsLengthRef.current !== messages.length || count === 0) {
+      } else if (prevMsgsLengthRef.current !== messages.length) {
         // 이전 메세지가 화면에 없고 + 새로운 메세지가 추가되면 스크롤 다운이 따라가도록
         scrollBox.scrollTop = scrollBox.scrollHeight;
         prevMsgsLengthRef.current = messages.length;
@@ -130,8 +135,7 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
   const handleScroll = () => {
     const scrollBox = scrollRef.current;
     if (scrollBox) {
-      // 5 상수화
-      const isScroll = scrollBox.scrollTop < scrollBox.scrollHeight - scrollBox.clientHeight - 5;
+      const isScroll = scrollBox.scrollTop < scrollBox.scrollHeight - scrollBox.clientHeight - SCROLL_GAP;
       setIsScrolling(isScroll);
       if (!isScroll) {
         setNewAddedMsgNum(0);
@@ -160,8 +164,8 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
         onScroll={handleScroll}
       >
         <ChatSearch isScrollTop={isScrollTop} />
-        {hasMore ? <LoadChatMore chatRoomId={chatRoomId} count={count} setCount={setCount} /> : <></>}
-        {messages &&
+        {hasMore ? <LoadChatMore chatRoomId={chatRoomId} loadCount={loadCount} setLoadCount={setLoadCount} /> : <></>}
+        {messages?.length ? (
           messages.map((msg, idx) => (
             <div key={msg.message_id} className="w-full">
               {isNextDay(idx, messages) ? (
@@ -185,7 +189,13 @@ const ChatList = ({ user, chatRoomId }: { user: User | null; chatRoomId: string 
                 </div>
               ) : null}
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="mx-auto my-auto text-gray-400">
+            <ul className="text-center">아직 대화내용이 없습니다.</ul>
+            <ul>대화를 통해 서로에 대해 알아보세요!</ul>
+          </div>
+        )}
       </div>
       {isScrolling ? (
         newAddedMsgNum === 0 ? (

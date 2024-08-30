@@ -1,5 +1,5 @@
 'use client';
-import { useMsgsQuery } from '@/hooks/useQueries/useChattingQuery';
+
 import { MSGS_QUERY_KEY } from '@/query/chat/chatQueryKeys';
 import { chatStore } from '@/store/chatStore';
 import { getFromTo } from '@/utils/utilFns';
@@ -8,22 +8,23 @@ import { clientSupabase } from '@/utils/supabase/client';
 import { Button } from '@nextui-org/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Dispatch, SetStateAction } from 'react';
+import { useMsgsQuery } from '@/query/useQueries/useChattingQuery';
 
 const LoadChatMore = ({
   chatRoomId,
-  count,
-  setCount
+  loadCount,
+  setLoadCount
 }: {
   chatRoomId: string;
-  count: number;
-  setCount: Dispatch<SetStateAction<number>>;
+  loadCount: number;
+  setLoadCount: Dispatch<SetStateAction<number>>;
 }) => {
   const { setHasMore } = chatStore((state) => state);
   const messages = useMsgsQuery(chatRoomId);
   const queryClient = useQueryClient();
 
   const fetchMoreMsg = async () => {
-    const { from, to } = getFromTo(count, ITEM_INTERVAL);
+    const { from, to } = getFromTo(loadCount, ITEM_INTERVAL);
     const { error, data: newMsgs } = await clientSupabase
       .from('messages')
       .select('*')
@@ -40,7 +41,7 @@ const LoadChatMore = ({
       } else if (!newMsgs.length) {
         alert('더 이상 불러올 메세지가 없습니다.');
       } else {
-        setCount((prev) => prev + 1);
+        setLoadCount((prev) => prev + 1);
       }
     }
   };
