@@ -15,6 +15,7 @@ import googleLoginLogo from '@/utils/icons/logo_google.png';
 import { IoMdEye, IoMdEyeOff } from 'react-icons/io';
 import cookie from 'react-cookies';
 import { customErrToast } from '../common/customToast';
+import TestUserLogin from '../testUser/TestUserLogin';
 
 const LoginForm = () => {
   const [loginData, setLoginData] = useState<LoginDataType>({ userId: '', password: '' });
@@ -153,6 +154,7 @@ const LoginForm = () => {
               </Link>
             </div>
           </div>
+          <TestUserLogin />
           <Button
             className="duration-200 bg-mainColor text-white p-5 mt-[24px] rounded-lg font-semibold w-full py-[20px] h-auto text-base"
             type="submit"
